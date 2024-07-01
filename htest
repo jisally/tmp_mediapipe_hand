@@ -100,3 +100,65 @@ total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 cv2.createTrackbar('Position', 'MediaPipe Hands', 0, total_frames, onChange)
 detect_hands_in_video(cap)
 cap.release()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////
+
+import os
+import json
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 입력 폴더 경로
+input_folder = 'C:/Users/seungyeon0510/Desktop/jjii/mediapiejson'
+
+# 모든 좌표 데이터 저장
+all_coords = []
+
+# 폴더 내 모든 JSON 파일 순회
+for filename in os.listdir(input_folder):
+    if filename.endswith('.json'):
+        with open(os.path.join(input_folder, filename), 'r') as f:
+            data = json.load(f)
+            for coords in data:
+                if coords:
+                    all_coords.append(tuple(coords))
+
+# 좌표 데이터를 numpy 배열로 변환
+coords_array = np.array(all_coords)
+
+# 좌표 데이터의 최솟값과 최댓값 구하기
+x_min, y_min, z_min = np.min(coords_array, axis=0)
+x_max, y_max, z_max = np.max(coords_array, axis=0)
+
+# 좌표 데이터 정규화
+coords_array[:, 0] = (coords_array[:, 0] - x_min) / (x_max - x_min)
+coords_array[:, 1] = (coords_array[:, 1] - y_min) / (y_max - y_min)
+coords_array[:, 2] = (coords_array[:, 2] - z_min) / (z_max - z_min)
+
+# 2D 히스토그램 생성
+hist, xedges, yedges = np.histogram2d(coords_array[:, 0], coords_array[:, 1], bins=100)
+
+# 히스토그램 시각화
+plt.figure(figsize=(8, 8))
+plt.imshow(hist.T, cmap='gray', extent=[0, 1, 0, 1])
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('Gray Scale Visualization of Coordinate Data')
+plt.show()
